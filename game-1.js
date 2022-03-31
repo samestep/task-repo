@@ -1,7 +1,7 @@
 
 let f = false
 let start;
-// TODO: finish timing code???
+let snakeElapsed = 0;
 const c = document.getElementById('c');
 c.width = 640;
 c.height = 640;
@@ -12,8 +12,8 @@ let dx = 20, dy = 20;
 let food = { x: getRandomArbitrary(1, 640), y: getRandomArbitrary(1, 640) };
 let s = [{ x: 320, y: 320 }];
 
-const MOVE = { 
-    'up': (pos) => { return { x: pos.x, y: pos.y - dy } }, 
+const MOVE = {
+    'up': (pos) => { return { x: pos.x, y: pos.y - dy } },
     'down': (pos) => { return { x: pos.x, y: pos.y + dy } },
     'left': (pos) => { return { x: pos.x - dx, y: pos.y } },
     'right': (pos) => { return { x: pos.x + dx, y: pos.y } }
@@ -31,6 +31,14 @@ const drawFood = () => {
     return pos;
 }
 
+const snakeClear = () => {
+    g.fillStyle = 'white';
+    g.clearRect(0, 0, 640, 640);
+    g.rect(0, 0, 640, 640);
+    g.closePath();
+    g.fill();
+}
+
 const drawSnake = () => {
     s.forEach(r => new Rectangle(r.x, r.y, 10, 10).draw(g));
 }
@@ -46,55 +54,62 @@ const moveSnake = (timestamp) => {
     if(!start) {
         start = timestamp;
     }
-
-    const oldS = s;
-    s = s.map((p, i) => {
-        return i === 0 ? MOVE[d](p) : oldS[i - 1];
-    });
-    const legal = checkIfLegalMove(s);
-    const id = legal && f && window.requestAnimationFrame(moveSnake);
-    new Circle(food.x, food.y, 10).draw(g);
-    if(!legal) {
-        drawSnake();
-        gameOver();
-        return;
-    }
-    if(checkFoodCollision()) {
-        generateFood();
-        const endOfSnake = s[s.length - 1];
-        switch(d) {
-            case 'up':
-                s.push({ x: endOfSnake.x, y: endOfSnake.y - dy });
-                break;
-            case 'down':
-                s.push({ x: endOfSnake.x, y: endOfSnake.y + dy });
-                break;
-            case 'left':
-                s.push({ x: endOfSnake.x + dx, y: endOfSnake.y });
-                break;
-            case 'right':
-                s.push({ x: endOfSnake.x - dx, y: endOfSnake.y });
-                break;
+    snakeElapsed = timestamp - start;
+    window.requestAnimationFrame(moveSnake);
+    if (f) {
+        if (snakeElapsed >= 600) {
+            snakeClear();
+            const oldS = s;
+            s = s.map((p, i) => {
+                return i === 0 ? MOVE[d](p) : oldS[i - 1];
+            });
+            const legal = checkIfLegalMove(s);
+            new Circle(food.x, food.y, 10).draw(g);
+            if(!legal) {
+                drawSnake();
+                gameOver();
+                return;
+            }
+            if(checkFoodCollision()) {
+                generateFood();
+                const endOfSnake = s[s.length - 1];
+                switch(d) {
+                    case 'up':
+                        s.push({ x: endOfSnake.x, y: endOfSnake.y - dy });
+                        break;
+                    case 'down':
+                        s.push({ x: endOfSnake.x, y: endOfSnake.y + dy });
+                        break;
+                    case 'left':
+                        s.push({ x: endOfSnake.x + dx, y: endOfSnake.y });
+                        break;
+                    case 'right':
+                        s.push({ x: endOfSnake.x - dx, y: endOfSnake.y });
+                        break;
+                }
+                point += 50;
+            }
+            drawSnake();
+            start = timestamp;
+            snakeElapsed = 0;
         }
-        point += 50;
     }
-    drawSnake();
-    
 }
 
-// TODO : implement Scoreboard? 
+// TODO : implement Scoreboard?
 
 
 const intro = () => {
     g.font = '30px Arial';
     g.fillStyle = 'black';
-    
+
     g.textAlign = 'center';
-    
-    g.fillText('Play Snake - press Enter to Start', 320, 320);
+
+    g.fillText('Play Snake - click then press Enter to Start', 320, 320);
 }
 
 const startGame = () => {
+    snakeClear();
     if(f) {
         s = [{ x: 320, y: 320 }];
         d = 'up';
@@ -110,7 +125,7 @@ const gameOver = () => {
     g.textAlign = 'center';
     g.fillText(`Game over! You earned ${point} points.`, 320, 320);
     g.fillText(`Press Enter to play again.`, 320, 360);
-    setTimeout(() => { 
+    setTimeout(() => {
         if(!f) {
             intro();
         }
@@ -118,7 +133,7 @@ const gameOver = () => {
 }
 
 const checkFoodCollision = () => {
-    return ((food.x - Math.floor( 5 * Math.PI) < s[0].x ) || (food.x + Math.floor( 5 * Math.PI)) > s[0].x) && 
+    return ((food.x - Math.floor( 5 * Math.PI) < s[0].x ) || (food.x + Math.floor( 5 * Math.PI)) > s[0].x) &&
     ((food.y - Math.floor( 5 * Math.PI) < s[0].y ) || (food.y + Math.floor( 5 * Math.PI)) > s[0].y)
 }
 
@@ -127,7 +142,7 @@ window.addEventListener('keydown', (e) => {
     switch(key) {
         case 'Enter':
             e.preventDefault();
-            if(!f) {
+            if(!f && c === document.activeElement) {
                 f = true;
                 startGame();
             }
@@ -170,4 +185,3 @@ window.addEventListener('keydown', (e) => {
 
 
 intro();
-

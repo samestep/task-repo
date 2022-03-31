@@ -17,14 +17,14 @@ const sh = {
     't': [[-1, 0], [0, 0], [1, 0], [0, 1]],
     'sq': [[0, 0], [1, 0], [0, 1], [1, 1]],
     'l': [[-1, -1], [0, -1], [0, 0], [0, 1]],
-    'j': [[1, -1], [0, -1], [0, 0], [0, 1]] 
+    'j': [[1, -1], [0, -1], [0, 0], [0, 1]]
 };
 const ds = {
-    'left': [-1, 0],
-    'right': [1, 0],
+    'left': [-1, 1],
+    'right': [1, 1],
     'down': [0, 1]
 }
-var fs; 
+var fs;
 var fsRow = 1;
 var fsCol = 7;
 let falling = false;
@@ -49,7 +49,7 @@ const draw = () => {
         gt.font = '30px Arial';
         gt.fillStyle = 'black';
         gt.textAlign = 'center';
-        gt.fillText('Play Tetris - press Enter to Start', 320, 320);
+        gt.fillText('Play Tetris - click then press Enter to Start', 320, 320);
     }
     else {
         fs = getRandomShape();
@@ -72,7 +72,7 @@ const displayGameOver = () => {
     gt.fillStyle = 'black';
     gt.textAlign = 'center';
     gt.fillText(`You got ${st} rows`, 320, 320);
-    gt.fillText(`Press Enter to play again.`, 320, 360);  
+    gt.fillText(`Press Enter to play again.`, 320, 360);
 }
 
 const getRandomColor = () => {
@@ -108,7 +108,7 @@ const shapeLanded = () => {
     });
 
     st = removeLines();
-    if(fsRow < 0) {
+    if(fsRow <= 1) { // because it starts as 1
         displayGameOver();
     }
 }
@@ -125,7 +125,7 @@ const moveShape = () => {
             fs = getRandomShape();
             col = getRandomColor();
             fsRow = 1;
-            fsCol = 5; 
+            fsCol = 5;
         }
     }
 }
@@ -190,6 +190,7 @@ function animate(t) {
 
 const init = () => {
     clear();
+    cd = 'down';
     grid = new Grid(nr, nc);
     draw();
 }
@@ -221,7 +222,7 @@ window.addEventListener('keydown', (e) => {
     const { key } = e;
     switch(key) {
         case 'Enter':
-            if(!play) {
+            if(!play && t === document.activeElement) {
                 play = true;
                 sg();
             }
